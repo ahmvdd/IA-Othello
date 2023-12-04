@@ -1,6 +1,8 @@
 import random
 
 # Object used to create new boards
+
+
 class Board:
     def __init__(self, size):
         self.size = size
@@ -19,14 +21,14 @@ class Board:
                     self.board.append(Tile(x_pos, y_pos, "X", "o"))
         self.place_initial_pawns()
 
-#  This will print the game board, depending on the data_type
-#  Data types are "Coordinates", "Type" and "Content"
+    #  This will print the game board, depending on the data_type
+    #  Data types are "Coordinates", "Type" and "Content"
     def draw_board(self, data_type):
         display_board = []
         line_breaker = 0
-        print( [0, '0', '1', '2', '3', '4', '5', '6', '7'])
+        print([0, '0', '1', '2', '3', '4', '5', '6', '7'])
         for board_index in self.board:
-            if(board_index.x_pos == 0):
+            if (board_index.x_pos == 0):
                 display_board.append(board_index.y_pos)
             if data_type == "Coordinates":
                 display_board.append([board_index.x_pos, board_index.y_pos])
@@ -49,7 +51,7 @@ class Board:
         self.board[28].content = "B"
         self.board[35].content = "B"
         self.board[36].content = "W"
-    
+
     # Check if the position in inside the board
     # Return true or false depending if it is inside or not
     def is_on_board(self, x_pos, y_pos):
@@ -57,22 +59,22 @@ class Board:
             return False
         else:
             return True
-    
+
     # Check if the tile is an empty tile ("o")
     # Return true or false depending if it is empty or not
     def is_tile_empty(self, x_pos, y_pos):
-        if self.board[(x_pos) + y_pos  * 8].content == "o":
+        if self.board[(x_pos) + y_pos * 8].content == "o":
             return True
         else:
             return False
 
-    # Takes a position (x_pos, y_pos) and a color 
+    # Takes a position (x_pos, y_pos) and a color
     # Try to simulate the move
     # Returns either false if the move is not valid
     # Or returns which pawns will change color if true
     # The returned list will contain [numbers_of_pawns_to_change, [direction_x, direction_y]]
     def is_legal_move(self, x_pos, y_pos, color):
-        
+
         # North / Nort-East / East / South-East / South / South-West / West / North-West
         directions = [
             [0, -1],
@@ -99,7 +101,7 @@ class Board:
         # [[1, [1, 0]]
         tiles_to_flip = []
 
-        if(not self.is_tile_empty(current_x_pos, current_y_pos) or not self.is_on_board(current_x_pos, current_y_pos)):
+        if (not self.is_tile_empty(current_x_pos, current_y_pos) or not self.is_on_board(current_x_pos, current_y_pos)):
             return False
 
         # Check for every direction
@@ -111,22 +113,24 @@ class Board:
             # Check if the new position is on the board and empty
             if self.is_on_board(current_x_pos, current_y_pos):
                 #  Get the tile informations
-                current_index = self.board[current_x_pos + current_y_pos  * 8]
+                current_index = self.board[current_x_pos + current_y_pos * 8]
                 # If the tile contains a pawn of the opposite color, continue on the line
                 while current_index.content == awaited_color:
                     current_x_pos += current_dir[0]
                     current_y_pos += current_dir[1]
                     if self.is_on_board(current_x_pos, current_y_pos):
-                        current_index = self.board[current_x_pos + current_y_pos  * 8]
+                        current_index = self.board[current_x_pos +
+                                                   current_y_pos * 8]
                         # If the line ends with a pawn of your color, then the move is legal
                         if current_index.content == color:
                             is_legal = True
-                            tiles_to_flip.append([number_of_tiles_to_flip, current_dir])
+                            tiles_to_flip.append(
+                                [number_of_tiles_to_flip, current_dir])
                             break
                     else:
                         break
                     number_of_tiles_to_flip += 1
-                    
+
         if is_legal:
             return tiles_to_flip
         else:
@@ -153,8 +157,10 @@ class Board:
 
 # Used to create each tile of your board
 # Contains a position (x, y), a type to check if it's a boder tile or not, and a content to check if there is a pawn inside the tile
+
+
 class Tile:
-    #   Type is used to check if its an "O" empty tile or a "X" border tle
+    #   Type is used to check if its an "O" empty tile or a "X" border tile
     #   Content is used to check if a pawn is placed o (Empty), B (Black), W (White)
     def __init__(self, x_pos, y_pos, type, content):
         self.x_pos = x_pos
@@ -164,6 +170,8 @@ class Tile:
 
 # Used to create new ruleset
 # Contains the score, the active player, the game_over check and functions allowing to interact with the game
+
+
 class Game:
     def __init__(self):
         self.score_black = 2
@@ -176,22 +184,25 @@ class Game:
     # The function will automatically check if the move is valid or not
     def place_pawn(self, x_pos, y_pos, board_instance, color):
         if not board_instance.is_on_board(x_pos, y_pos):
-            print("Coordinates outside the board") 
+            print("Coordinates outside the board")
         else:
-            if board_instance.board[(x_pos) + y_pos  * 8].content == "o":
-                tiles_to_flip = board_instance.is_legal_move(x_pos, y_pos, color)
+            if board_instance.board[(x_pos) + y_pos * 8].content == "o":
+                tiles_to_flip = board_instance.is_legal_move(
+                    x_pos, y_pos, color)
                 if not tiles_to_flip:
                     print("Invalid move")
                 else:
-                    board_instance.board[(x_pos) + y_pos  * 8].content = color
-                    board_instance.flip_tiles(x_pos, y_pos, tiles_to_flip, color)
+                    board_instance.board[(x_pos) + y_pos * 8].content = color
+                    board_instance.flip_tiles(
+                        x_pos, y_pos, tiles_to_flip, color)
+                    print(f"Pion placé en {x_pos}, {y_pos}")
                     self.update_score(board_instance)
                     self.change_active_player()
                     self.check_for_valid_moves(board_instance)
                     board_instance.draw_board("Content")
             else:
                 print("There is already a pawn here")
-    
+
     # Change the active player color from black to white or white to black
     def change_active_player(self):
         # Prend self.active_player et change la couleur du joueur actif
@@ -202,7 +213,7 @@ class Game:
             self.active_player = "B"
             print("C'est au tour du joueur noir")
 
-    # Update the players score after a successful move 
+    # Update the players score after a successful move
     def update_score(self, board_instance):
         # Count all the black & white pawns, and update the scores
         w_score = 0
@@ -219,37 +230,38 @@ class Game:
     def check_for_valid_moves(self, board_instance):
         is_game_over = True
         for tile_index in board_instance.board:
-            move_to_check = board_instance.is_legal_move(tile_index.x_pos, tile_index.y_pos, self.active_player)
-            if move_to_check != False: 
+            move_to_check = board_instance.is_legal_move(
+                tile_index.x_pos, tile_index.y_pos, self.active_player)
+            if move_to_check != False:
                 is_game_over = False
 
         if is_game_over:
             self.check_for_winner()
             self.is_game_over = True
-            
+
     # Compare the score, and print the winner's color
     def check_for_winner(self):
         print("Partie terminée !")
         print("Le joueur noir a: " + str(self.score_black) + " points")
         print("Le joueur white a: " + str(self.score_white) + " points")
-        if(self.score_black > self.score_white):
+        if (self.score_black > self.score_white):
             print("Le joueur noir a gagné !")
         elif (self.score_white > self.score_black):
             print("Le joueur blanc a gagné !")
         else:
             print("Égalité !")
 
+
 class Bot:
     def __init__(self):
-        self.next_x = 0
-        self.next_y = 0
+        self.name = "Name of your Bot"
 
+    # BOT FUNCTIONS
 
-    # BOT FUNCTIONS 
-    def check_valid_moves():
-        print("On veut indiquer où le bot peut jouer sur othello_board")
-
-
+    def check_valid_moves(self):
+        print("Il faut récupérer toutes les cases du tableau")
+        print("Vérifier quels coups sont jouables")
+        print("Et renvoyer les coordonnées")
 
 
 # Create a new board & a new game instances
@@ -269,15 +281,17 @@ otherBot = Bot()
 # Loop until the game is over
 while not othello_game.is_game_over:
     # First player / bot logic goes here
-    if(othello_game.active_player == "B"):
-        player_x_pos = int(input("Coordonnées en X: "))
-        player_y_pos = int(input("Coordonnées en Y: "))
-        othello_game.place_pawn(player_x_pos, player_y_pos, othello_board, othello_game.active_player)
-
+    if (othello_game.active_player == "B"):
+        move_coordinates = [0, 0]
+        move_coordinates[0] = int(input("Coordonnées en X: "))
+        move_coordinates[1] = int(input("Coordonnées en Y: "))
+        othello_game.place_pawn(
+            move_coordinates[0], move_coordinates[1], othello_board, othello_game.active_player)
 
     # Second player / bot logic goes here
     else:
-        player_x_pos = int(input("Coordonnées en X: "))
-        player_y_pos = int(input("Coordonnées en Y: "))
-        othello_game.place_pawn(player_x_pos, player_y_pos, othello_board, othello_game.active_player)
-    
+        move_coordinates = [0, 0]
+        move_coordinates[0] = int(input("Coordonnées en X: "))
+        move_coordinates[1] = int(input("Coordonnées en Y: "))
+        othello_game.place_pawn(
+            move_coordinates[0], move_coordinates[1], othello_board, othello_game.active_player)
