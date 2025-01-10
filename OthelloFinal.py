@@ -277,10 +277,30 @@ class Bot:
 
     # BOT FUNCTIONS
 
-    def check_valid_moves(self):
-        print("Il faut récupérer toutes les cases du tableau")
-        print("Vérifier quels coups sont jouables")
-        print("Et renvoyer les coordonnées")
+    def check_valid_moves(self, board):
+        TRUE_MOVE = []
+        best_move = None
+        max_tiles_to_flip = 0
+
+        for tile in board.board:
+            if tile.content == "🟩":
+                test_case = board.is_legal_move(tile.x_pos, tile.y_pos, othello_game.active_player)
+                if test_case:
+                    # Calculate total tiles to flip for this move
+                    total_tiles_to_flip = sum(flip[0] for flip in test_case)
+                    TRUE_MOVE.append((tile.x_pos, tile.y_pos, total_tiles_to_flip))
+
+                    # Check if this move is the best so far
+                    if total_tiles_to_flip > max_tiles_to_flip:
+                        best_move = (tile.x_pos, tile.y_pos)
+                        max_tiles_to_flip = total_tiles_to_flip
+
+        if TRUE_MOVE:
+            print(f"Joueur {othello_game.active_player} joue le coup optimal à {best_move}")
+            return best_move
+
+
+
 
 # Create a new board & a new game instances
 othello_board = Board(8)
@@ -301,15 +321,21 @@ while not othello_game.is_game_over:
     # First player / bot logic goes here
     if (othello_game.active_player == "⚫"):
         move_coordinates = [0, 0]
-        move_coordinates[0] = int(input("Coordonnées en X: "))
-        move_coordinates[1] = int(input("Coordonnées en Y: "))
+        # move_coordinates[0] = int(input("Coordonnées en X: "))
+        # move_coordinates[1] = int(input("Coordonnées en Y: "))
+
+        move_coordinates = myBot.check_valid_moves(othello_board)
+
         othello_game.place_pawn(
             move_coordinates[0], move_coordinates[1], othello_board, othello_game.active_player)
 
     # Second player / bot logic goes here
     else:
         move_coordinates = [0, 0]
-        move_coordinates[0] = int(input("Coordonnées en X: "))
-        move_coordinates[1] = int(input("Coordonnées en Y: "))
+        # move_coordinates[0] = int(input("Coordonnées en X: "))
+        # move_coordinates[1] = int(input("Coordonnées en Y: "))
+
+        move_coordinates = myBot.check_valid_moves(othello_board)
+
         othello_game.place_pawn(
             move_coordinates[0], move_coordinates[1], othello_board, othello_game.active_player)
