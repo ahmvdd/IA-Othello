@@ -2,6 +2,7 @@ import random
 import copy
 
 
+
 # Object used to create new boards
 
 
@@ -277,6 +278,140 @@ class Game:
 #kjvdfkjvdfvjdfv
 
 
+# NOUVELLE VERSION //////////////////////////////////////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+class Bot:
+    def __init__(self):
+        self.name = "Strategic Bot"
+        self.corner_matrix = [
+            1000, -10, -10, -10, -10, -10, -10, 1000,
+            -10, -5, -5, -5, -5, -5, -5, -10,
+            -10, -5, -5, -5, -5, -5, -5, -10,
+            -10, -5, -5, -5, -5, -5, -5, -10,
+            -10, -5, -5, -5, -5, -5, -5, -10,
+            -10, -5, -5, -5, -5, -5, -5, -10,
+            -10, -5, -5, -5, -5, -5, -5, -10,
+            1000, -10, -10, -10, -10, -10, -10, 1000
+        ]
+
+    def evaluate_move(self, board, x, y, player):
+        """Évalue un coup à une position donnée."""
+        # Définir une matrice pour prioriser les coins
+        corner_matrix = [
+            1000, -10, -10, -10, -10, -10, -10, 1000,
+            -10, -5, -5, -5, -5, -5, -5, -10,
+            -10, -5, -5, -5, -5, -5, -5, -10,
+            -10, -5, -5, -5, -5, -5, -5, -10,
+            -10, -5, -5, -5, -5, -5, -5, -10,
+            -10, -5, -5, -5, -5, -5, -5, -10,
+            -10, -5, -5, -5, -5, -5, -5, -10,
+            1000, -10, -10, -10, -10, -10, -10, 1000
+        ]
+        # Retourne la valeur de la position selon la matrice
+        return corner_matrix[x][y]  # Utilise la matrice de coins
+
+    def evaluate_board(self, board, player):
+        """Évalue le plateau en fonction des positions des pions."""
+        score = 0
+        for tile in board.board:
+            if tile.content == player:
+                score += self.evaluate_move(board, tile.x_pos, tile.y_pos, player)
+            elif tile.content == self.get_opponent_color(player):
+                score -= self.evaluate_move(board, tile.x_pos, tile.y_pos, player)
+        return score
+
+    def get_valid_moves(self, board, player):
+        """Récupère les coups valides pour un joueur donné."""
+        valid_moves = []
+        max_points = float('-inf')
+        compteur = 0
+        for tile in board.board:
+            points = 0
+            current_move = board.is_legal_move(tile.x_pos, tile.y_pos, player)
+            if current_move != False:
+                for i in current_move:
+                    points += i[0]
+                points += self.corner_matrix[compteur]
+
+                if points > max_points:
+                    max_points = points
+                    valid_moves = [[tile.x_pos, tile.y_pos]]
+                elif points == max_points:
+                    valid_moves.append((tile.x_pos, tile.y_pos))
+            compteur += 1
+                
+        return valid_moves
+
+    def simulate_move(self, board, x, y, player):
+        """Simule un coup en plaçant un pion sur le plateau."""
+        board_copy = copy.deepcopy(board)
+        tiles_to_flip = board_copy.is_legal_move(x, y, player)
+        if tiles_to_flip:
+            board_copy.board[x + y * 8].content = player
+            board_copy.flip_tiles(x, y, tiles_to_flip, player)
+        return board_copy
+
+    def get_opponent_color(self, player):
+        """Retourne la couleur de l'adversaire."""
+        return "⚪" if player == "⚫" else "⚫"
+
+    def check_valid_moves(self, board, active_player):
+        """Sélectionne le meilleur coup en utilisant l'évaluation des coins."""
+        valid_moves = self.get_valid_moves(board, active_player)
+
+        return random.choice(valid_moves)
+
+
+
+#dhvbdfhv
+
+
+
+
+# Create a new board & a new game instances
+othello_board = Board(8)
+othello_game = Game()
+
+# Fill the board with tiles
+othello_board.create_board()
+
+# Draw the board
+othello_board.draw_board("Content")
+
+# Create 2 bots
+myBot = Bot()
+otherBot = Bot()
+
+
+
+
+while not othello_game.is_game_over:
+    # First player / bot logic goes here
+    if (othello_game.active_player == "⚫"):
+        move_coordinates = myBot.check_valid_moves(othello_board, othello_game.active_player)
+        othello_game.place_pawn(
+            move_coordinates[0], move_coordinates[1], othello_board, othello_game.active_player)
+        
+    # Second player / bot logic goes here
+    else:
+        move_coordinates = myBot.check_valid_moves(othello_board, othello_game.active_player)
+        if move_coordinates:
+            othello_game.place_pawn(
+                move_coordinates[0], move_coordinates[1], othello_board, othello_game.active_player)
+
+    
+
+
+
+
+
+
+
+
+# version 1/////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+
+
 # class Bot:
 #     def __init__(self):
 #         self.name = "Strategic Bot"
@@ -385,126 +520,73 @@ class Game:
 #         return best_move
 
 
+# code final 
 
-# NOUVELLE VERSION //////////////////////////////////////////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-class Bot:
-    def __init__(self):
-        self.name = "Strategic Bot"
+# import copy
 
-    def evaluate_move(self, board, x, y, player):
-        """Évalue un coup à une position donnée."""
-        # Logic to evaluate the position (could be replaced with custom logic)
-        return 1  # Placeholder, should be replaced with actual evaluation logic.
+# class Bot:
+#     def __init__(self):
+#         self.name = "Strategic Bot"
 
-    def evaluate_board(self, board, player):
-        """Évalue le plateau en fonction des positions des pions."""
-        score = 0
-        for tile in board.board:
-            if tile.content == player:
-                score += self.evaluate_move(board, tile.x_pos, tile.y_pos, player)
-        return score
+#     def evaluate_move(self, board, x, y, player):
+#         """Évalue un coup à une position donnée."""
+#         # Définir une matrice pour prioriser les coins
+#         corner_matrix = [
+#             [1000, -10, -10, -10, -10, -10, -10, 1000],
+#             [-10, -5, -5, -5, -5, -5, -5, -10],
+#             [-10, -5, -5, -5, -5, -5, -5, -10],
+#             [-10, -5, -5, -5, -5, -5, -5, -10],
+#             [-10, -5, -5, -5, -5, -5, -5, -10],
+#             [-10, -5, -5, -5, -5, -5, -5, -10],
+#             [-10, -5, -5, -5, -5, -5, -5, -10],
+#             [1000, -10, -10, -10, -10, -10, -10, 1000]
+#         ]
+#         # Retourne la valeur de la position selon la matrice
+#         return corner_matrix[x][y]  # Utilise la matrice de coins
 
-    def get_valid_moves(self, board, player):
-        """Récupère les coups valides pour un joueur donné."""
-        valid_moves = []
-        for tile in board.board:
-            if tile.content == "🟩":
-                if board.is_legal_move(tile.x_pos, tile.y_pos, player):
-                    valid_moves.append((tile.x_pos, tile.y_pos))
-        return valid_moves
+#     def evaluate_board(self, board, player):
+#         """Évalue le plateau en fonction des positions des pions."""
+#         score = 0
+#         for tile in board.board:
+#             if tile.content == player:
+#                 score += self.evaluate_move(board, tile.x_pos, tile.y_pos, player)
+#             elif tile.content == self.get_opponent_color(player):
+#                 score -= self.evaluate_move(board, tile.x_pos, tile.y_pos, player)
+#         return score
 
-    def simulate_move(self, board, x, y, player):
-        """Simule un coup en plaçant un pion sur le plateau."""
-        board_copy = copy.deepcopy(board)
-        tiles_to_flip = board_copy.is_legal_move(x, y, player)
-        if tiles_to_flip:
-            board_copy.board[x + y * 8].content = player
-            board_copy.flip_tiles(x, y, tiles_to_flip, player)
-        return board_copy
+#     def get_valid_moves(self, board, player):
+#         """Récupère les coups valides pour un joueur donné."""
+#         valid_moves = []
+#         for tile in board.board:
+#             if tile.content == "🟩":
+#                 if board.is_legal_move(tile.x_pos, tile.y_pos, player):
+#                     valid_moves.append((tile.x_pos, tile.y_pos))
+#         return valid_moves
 
-    def get_opponent_color(self, player):
-        """Retourne la couleur de l'adversaire."""
-        return "⚪" if player == "⚫" else "⚫"
+#     def simulate_move(self, board, x, y, player):
+#         """Simule un coup en plaçant un pion sur le plateau."""
+#         board_copy = copy.deepcopy(board)
+#         tiles_to_flip = board_copy.is_legal_move(x, y, player)
+#         if tiles_to_flip:
+#             board_copy.board[x + y * 8].content = player
+#             board_copy.flip_tiles(x, y, tiles_to_flip, player)
+#         return board_copy
 
-    def check_valid_moves(self, board, active_player):
-        """Sélectionne le meilleur coup."""
-        valid_moves = self.get_valid_moves(board, active_player)
-        best_move = None
-        best_value = float('-inf')
+#     def get_opponent_color(self, player):
+#         """Retourne la couleur de l'adversaire."""
+#         return "⚪" if player == "⚫" else "⚫"
 
-        # Recherche du meilleur coup à une profondeur maximale
-        for move in valid_moves:
-            eval = self.evaluate_board(board, active_player)  # Using evaluate_board instead of Minimax
-            if eval > best_value:
-                best_value = eval
-                best_move = move
+#     def check_valid_moves(self, board, active_player):
+#         """Sélectionne le meilleur coup en utilisant l'évaluation des coins."""
+#         valid_moves = self.get_valid_moves(board, active_player)
+#         best_move = None
+#         best_value = float('-inf')
 
-        return best_move
+#         # Recherche du meilleur coup basé sur la priorité des coins
+#         for move in valid_moves:
+#             eval = self.evaluate_board(board, active_player)  # Utilise evaluate_board pour évaluer
+#             if eval > best_value:
+#                 best_value = eval
+#                 best_move = move
 
-    def prioritize_corners(self, move, player):
-        """Priorise les coins dans la sélection du coup."""
-        corners = [(0, 0), (0, 7), (7, 0), (7, 7)]
-        if move in corners:
-            return 1000  # Un score très élevé pour les coins
-        return 0  # Sinon, un score de 0
-
-
-
-
-#dhvbdfhv
-# Create a new board & a new game instances
-othello_board = Board(8)
-othello_game = Game()
-
-# Fill the board with tiles
-othello_board.create_board()
-
-# Draw the board
-othello_board.draw_board("Content")
-
-# Create 2 bots
-myBot = Bot()
-otherBot = Bot()
-
-
-
-
-while not othello_game.is_game_over:
-    # First player / bot logic goes here
-    if (othello_game.active_player == "⚫"):
-        move_coordinates = myBot.check_valid_moves(othello_board, othello_game.active_player)
-        othello_game.place_pawn(
-            move_coordinates[0], move_coordinates[1], othello_board, othello_game.active_player)
-        
-    # Second player / bot logic goes here
-    else:
-        move_coordinates = myBot.check_valid_moves(othello_board, othello_game.active_player)
-        if move_coordinates:
-            othello_game.place_pawn(
-                move_coordinates[0], move_coordinates[1], othello_board, othello_game.active_player)
-
-    
-
-
-    #   if (othello_game.active_player == "⚫"):
-    #     move_coordinates = [0, 0]
-    #     # move_coordinates[0] = int(input("Coordonnées en X: "))
-    #     # move_coordinates[1] = int(input("Coordonnées en Y: "))
-
-    #     move_coordinates = myBot.check_valid_moves(othello_board)
-
-
-    #     othello_game.place_pawn(
-    #         move_coordinates[0], move_coordinates[1], othello_board, othello_game.active_player)
-
-    # # Second player / bot logic goes here
-    # else:
-    #     move_coordinates = [0, 0]
-    #     move_coordinates[0] = int(input("Coordonnées en X: "))
-    #     move_coordinates[1] = int(input("Coordonnées en Y: "))
-    #     othello_game.place_pawn(
-    #         move_coordinates[0], move_coordinates[1], othello_board, othello_game.active_player)
-      
-
-
-
+#         return best_move
