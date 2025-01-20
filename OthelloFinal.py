@@ -310,9 +310,6 @@ class Bot:
         # Retourne la valeur de la position selon la matrice
         return corner_matrix[x][y]  # Utilise la matrice de coins
 
-
-
-
     def evaluate_board(self, board, player):
         """Évalue le plateau en fonction des positions des pions."""
         score = 0
@@ -323,15 +320,11 @@ class Bot:
                 score -= self.evaluate_move(board, tile.x_pos, tile.y_pos, player)
         return score
 
-
-
-
     def get_valid_moves(self, board, player):
         """Récupère les coups valides pour un joueur donné."""
         valid_moves = []
         max_points = float('-inf')
         compteur = 0
-        
         for tile in board.board:
             points = 0
             current_move = board.is_legal_move(tile.x_pos, tile.y_pos, player)
@@ -348,10 +341,6 @@ class Bot:
             compteur += 1
                 
         return valid_moves
-
-
-
-
 
     def simulate_move(self, board, x, y, player):
         """Simule un coup en plaçant un pion sur le plateau."""
@@ -375,10 +364,6 @@ class Bot:
 
 
 #dhvbdfhv
-
-
-
-
 
 
 
@@ -416,47 +401,6 @@ while not othello_game.is_game_over:
                 move_coordinates[0], move_coordinates[1], othello_board, othello_game.active_player)
 
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

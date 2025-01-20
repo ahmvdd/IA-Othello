@@ -1,4 +1,6 @@
-import random 
+
+import time
+import random
 import copy
 
 
@@ -326,76 +328,256 @@ class Bot:
         return "⚪" if player == "⚫" else "⚫"
     
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class AggressiveBot(Bot):
-    def check_valid_moves(self, board, active_player):
-        valid_moves = []
-        max_points = float('-inf')
-        compteur = 0
+    def __init__(self, max_time=0.5):
+        super().__init__()
+        self.max_time = max_time
+        self.start_time = None
 
-        # Définir les coordonnées des coins et des cases adjacentes aux coins
-        corner_positions = [(0, 0), (0, 7), (7, 0), (7, 7)]
-        adjacent_to_corner_positions = [
-            (0, 1), (1, 0), (1, 1),
-            (0, 6), (1, 6), (1, 7),
-            (6, 0), (6, 1), (7, 1),
-            (6, 6), (6, 7), (7, 6)
-        ]
-
-        for tile in board.board:
-            if board.is_legal_move(tile.x_pos, tile.y_pos, active_player):
-                # Calcul des points selon la position
-                points = self.corner_matrix[compteur]
-
-                # Prioriser les coins
-                if (tile.x_pos, tile.y_pos) in corner_positions:
-                    points += 500  # Priorité très élevée pour les coins
-
-                # Éviter les cases adjacentes aux coins
-                if (tile.x_pos, tile.y_pos) in adjacent_to_corner_positions:
-                    points -= 500  # Pénalité pour les cases adjacentes aux coins
-
-                # Maximiser les points
-                if points > max_points:
-                    max_points = points
-                    valid_moves = [[tile.x_pos, tile.y_pos]]  # Réinitialiser la liste avec le nouveau coup optimal
-                elif points == max_points:
-                    valid_moves.append([tile.x_pos, tile.y_pos])  # Ajouter les coups avec le même score
-
-            compteur += 1
+    def choose_best_move(self, board, player):
+        self.start_time = time.time()
+        best_move = None
+        best_score = float('-inf')
         
-        # Retourne le premier coup parmi ceux avec le score le plus élevé
-        return valid_moves[0] if valid_moves else None
+        # Limitation du nombre de mouvements explorés
+        possible_moves = [
+            tile for tile in board.board 
+            if board.is_legal_move(tile.x_pos, tile.y_pos, player)
+        ]
+        
+        # Tri rapide des mouvements par heuristique initiale
+        sorted_moves = sorted(
+            possible_moves, 
+            key=lambda tile: self.quick_move_evaluation(board, tile, player), 
+            reverse=True
+        )
+        
+        for tile in sorted_moves[:10]:  # Limiter à 10 meilleurs mouvements
+            if time.time() - self.start_time > self.max_time:
+                break
+            
+            simulated_board = self.simulate_move(board, tile.x_pos, tile.y_pos, player)
+            move_score = self.fast_minimax(simulated_board, 2, False)
+            
+            if move_score > best_score:
+                best_score = move_score
+                best_move = [tile.x_pos, tile.y_pos]
+        
+        return best_move
 
-    def evaluate_move(self, board, x, y, player):
-        """Évalue un coup en prenant en compte la situation actuelle du jeu"""
-        # Calcul de la position sur la base de la matrice des coins
-        corner_score = self.corner_matrix[x + y * 8]
-
-        # Si on est en fin de partie, on favorise les captures
-        if board.get_remaining_moves(player) <= 10:  # On est proche de la fin de la partie
-            # Donner plus de poids aux captures immédiates
-            corner_score += 200  # Priorité élevée aux captures
-        return corner_score
-
-    def evaluate_board(self, board, player):
-        """Évalue le plateau en fonction des positions des pions"""
+    def quick_move_evaluation(self, board, tile, player):
+        """Évaluation rapide d'un mouvement"""
         score = 0
-        for tile in board.board:
-            if tile.content == player:
-                score += self.evaluate_move(board, tile.x_pos, tile.y_pos, player)
-            elif tile.content == self.get_opponent_color(player):
-                score -= self.evaluate_move(board, tile.x_pos, tile.y_pos, player)
-
-        # Évaluer l'accessibilité des coins
-        corners = [(0, 0), (0, 7), (7, 0), (7, 7)]
-        for corner in corners:
-            x, y = corner
-            if board.board[x + y * 8].content == player:
-                score += 300  # Bonus pour contrôler un coin
-            elif board.board[x + y * 8].content == self.get_opponent_color(player):
-                score -= 300  # Pénalité pour l'adversaire qui contrôle un coin
-
+        
+        # Bonus pour les coins
+        if (tile.x_pos, tile.y_pos) in [(0,0), (0,7), (7,0), (7,7)]:
+            score += 50
+        
+        # Bonus pour le centre
+        if (tile.x_pos, tile.y_pos) in [(3,3), (3,4), (4,3), (4,4)]:
+            score += 30
+        
+        # Nombre de pions capturés
+        tiles_to_flip = board.is_legal_move(tile.x_pos, tile.y_pos, player)
+        score += len(tiles_to_flip) * 10
+        
         return score
+
+    def fast_minimax(self, board, depth, maximizing_player):
+        """Version simplifiée et rapide du minimax"""
+        if depth == 0 or time.time() - self.start_time > self.max_time:
+            return self.quick_board_evaluation(board, "⚫" if maximizing_player else "⚪")
+        
+        if maximizing_player:
+            max_eval = float('-inf')
+            for tile in board.board[:20]:  # Limiter l'exploration
+                if board.is_legal_move(tile.x_pos, tile.y_pos, "⚫"):
+                    new_board = self.simulate_move(board, tile.x_pos, tile.y_pos, "⚫")
+                    eval = self.fast_minimax(new_board, depth - 1, False)
+                    max_eval = max(max_eval, eval)
+            return max_eval
+        else:
+            min_eval = float('inf')
+            for tile in board.board[:20]:  # Limiter l'exploration
+                if board.is_legal_move(tile.x_pos, tile.y_pos, "⚪"):
+                    new_board = self.simulate_move(board, tile.x_pos, tile.y_pos, "⚪")
+                    eval = self.fast_minimax(new_board, depth - 1, True)
+                    min_eval = min(min_eval, eval)
+            return min_eval
+
+    def quick_board_evaluation(self, board, player):
+        """Évaluation ultra-rapide du plateau"""
+        score = 0
+        opponent = self.get_opponent_color(player)
+        
+        # Comptage rapide des pions
+        player_count = sum(1 for tile in board.board if tile.content == player)
+        opponent_count = sum(1 for tile in board.board if tile.content == opponent)
+        
+        score += (player_count - opponent_count) * 2
+        
+        return score
+
+    def check_valid_moves(self, board, active_player):
+        """Méthode principale de sélection de mouvement"""
+        best_move = self.choose_best_move(board, active_player)
+        return best_move
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# class AggressiveBot(Bot):
+#     def check_valid_moves(self, board, active_player):
+#         valid_moves = []
+#         max_points = float('-inf')
+#         compteur = 0
+
+#         # Définir les coordonnées des coins et des cases adjacentes aux coins
+#         corner_positions = [(0, 0), (0, 7), (7, 0), (7, 7)]
+#         adjacent_to_corner_positions = [
+#             (0, 1), (1, 0), (1, 1),
+#             (0, 6), (1, 6), (1, 7),
+#             (6, 0), (6, 1), (7, 1),
+#             (6, 6), (6, 7), (7, 6)
+#         ]
+
+#         for tile in board.board:
+#             if board.is_legal_move(tile.x_pos, tile.y_pos, active_player):
+#                 # Calcul des points selon la position
+#                 points = self.corner_matrix[compteur]
+
+#                 # Prioriser les coins
+#                 if (tile.x_pos, tile.y_pos) in corner_positions:
+#                     points += 500  # Priorité très élevée pour les coins
+
+#                 # Éviter les cases adjacentes aux coins
+#                 if (tile.x_pos, tile.y_pos) in adjacent_to_corner_positions:
+#                     points -= 500  # Pénalité pour les cases adjacentes aux coins
+
+#                 # Maximiser les points
+#                 if points > max_points:
+#                     max_points = points
+#                     valid_moves = [[tile.x_pos, tile.y_pos]]  # Réinitialiser la liste avec le nouveau coup optimal
+#                 elif points == max_points:
+#                     valid_moves.append([tile.x_pos, tile.y_pos])  # Ajouter les coups avec le même score
+
+#             compteur += 1
+        
+#         # Retourne le premier coup parmi ceux avec le score le plus élevé
+#         return valid_moves[0] if valid_moves else None
+
+#     def evaluate_move(self, board, x, y, player):
+#         """Évalue un coup en prenant en compte la situation actuelle du jeu"""
+#         # Calcul de la position sur la base de la matrice des coins
+#         corner_score = self.corner_matrix[x + y * 8]
+
+#         # Si on est en fin de partie, on favorise les captures
+#         if board.get_remaining_moves(player) <= 10:  # On est proche de la fin de la partie
+#             # Donner plus de poids aux captures immédiates
+#             corner_score += 200  # Priorité élevée aux captures
+#         return corner_score
+
+#     def evaluate_board(self, board, player):
+#         """Évalue le plateau en fonction des positions des pions"""
+#         score = 0
+#         for tile in board.board:
+#             if tile.content == player:
+#                 score += self.evaluate_move(board, tile.x_pos, tile.y_pos, player)
+#             elif tile.content == self.get_opponent_color(player):
+#                 score -= self.evaluate_move(board, tile.x_pos, tile.y_pos, player)
+
+#         # Évaluer l'accessibilité des coins
+#         corners = [(0, 0), (0, 7), (7, 0), (7, 7)]
+#         for corner in corners:
+#             x, y = corner
+#             if board.board[x + y * 8].content == player:
+#                 score += 300  # Bonus pour contrôler un coin
+#             elif board.board[x + y * 8].content == self.get_opponent_color(player):
+#                 score -= 300  # Pénalité pour l'adversaire qui contrôle un coin
+
+#         return score
+
+
+
+
 
 
 
